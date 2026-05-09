@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAMB Launchpad</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: #0a0a0a;
+            --accent: #00ff41;
+            --text: #e0e0e0;
+            --text-dim: #666;
+            --border: #1a1a1a;
+            --lamb-gold: #ffd700;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+        header {
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--lamb-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--accent);
+        }
+        .btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+            box-shadow: 0 0 15px var(--accent);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 25px;
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+        .card p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            line-height: 1.5;
+            height: 3em;
+            overflow: hidden;
+        }
+        .links {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+        }
+        .links a {
+            color: var(--lamb-gold);
+            text-decoration: none;
+            opacity: 0.7;
+        }
+        .links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+        .progress-container {
+            height: 4px;
+            background: #111;
+            margin-bottom: 12px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <div class="logo-text">LAMB</div>
+                <h1>Launchpad</h1>
+            </div>
+            <button class="btn" id="createBtn">New Campaign</button>
+        </header>
+        <div class="grid" id="projectGrid"></div>
+    </div>
+    <script>
+        bankr.on('ready', async () => {
+            const projects = await bankr.invokeScript('getProjects');
+            const grid = document.getElementById('projectGrid');
+            grid.innerHTML = projects.map(p => \`
+                <div class="card">
+                    <h3>\${p.name}</h3>
+                    <p>\${p.description}</p>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: \${(p.raised / p.maxTarget) * 100}%"></div>
+                    </div>
+                    <div class="stats">
+                        <span>Raised: \${p.raised} USDC</span>
+                        <span>Target: \${p.maxTarget} USDC</span>
+                    </div>
+                </div>
+            \`).join('');
+        });
+    </script>
+</body>
+</html>
