@@ -132,6 +132,79 @@
             color: var(--text-dim);
             text-transform: uppercase;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--accent);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group.full {
+            grid-column: span 2;
+        }
+        label {
+            display: block;
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        input, textarea {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px;
+            font-family: inherit;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .fee-notice {
+            font-size: 0.7rem;
+            color: var(--lamb-gold);
+            margin-top: 10px;
+            text-align: right;
+        }
+        .wallet-info {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-align: right;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -141,27 +214,157 @@
                 <div class="logo-text">LAMB</div>
                 <h1>Launchpad</h1>
             </div>
-            <button class="btn" id="createBtn">New Campaign</button>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                <div id="walletDisplay" class="wallet-info"></div>
+                <button class="btn" onclick="openModal()">+ Create Campaign</button>
+            </div>
         </header>
-        <div class="grid" id="projectGrid"></div>
+
+        <div id="projectGrid" class="grid">
+            <!-- Projects load here -->
+        </div>
     </div>
-    <script>
-        bankr.on('ready', async () => {
-            const projects = await bankr.invokeScript('getProjects');
-            const grid = document.getElementById('projectGrid');
-            grid.innerHTML = projects.map(p => \`
-                <div class="card">
-                    <h3>\${p.name}</h3>
-                    <p>\${p.description}</p>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: \${(p.raised / p.maxTarget) * 100}%"></div>
-                    </div>
-                    <div class="stats">
-                        <span>Raised: \${p.raised} USDC</span>
-                        <span>Target: \${p.maxTarget} USDC</span>
-                    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--accent); margin-top: 0; text-transform: uppercase; letter-spacing: 2px;">New Presale</h2>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>Project Name</label>
+                    <input type="text" id="pName" placeholder="e.g. CyberSheep">
                 </div>
-            \`).join('');
+                <div class="form-group full">
+                    <label>Description</label>
+                    <textarea id="pDesc" rows="3" placeholder="What are you building?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Min Target (USDC)</label>
+                    <input type="number" id="pMin" placeholder="1000">
+                </div>
+                <div class="form-group">
+                    <label>Max Target (USDC)</label>
+                    <input type="number" id="pMax" placeholder="5000">
+                </div>
+                <div class="form-group">
+                    <label>Website</label>
+                    <input type="url" id="pWeb" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>X Handle</label>
+                    <input type="text" id="pX" placeholder="@username">
+                </div>
+                <div class="form-group">
+                    <label>Telegram</label>
+                    <input type="url" id="pTg" placeholder="https://t.me/...">
+                </div>
+                <div class="form-group">
+                    <label>Campaign Post (X URL)</label>
+                    <input type="url" id="pPost" placeholder="https://x.com/...">
+                </div>
+            </div>
+            <div class="fee-notice">Creation Fee: $5 in $LAMB</div>
+            <div class="modal-actions">
+                <button class="btn" style="border-color: #444; color: #444;" onclick="closeModal()">Cancel</button>
+                <button class="btn" onclick="submitProject()">Launch</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const LAMB_TOKEN = '0x8007E199Ef3690115d946955a09DEeaD89885BA3';
+        const X402_URL = 'https://x402.bankr.bot/0xe5a4b1b587a50df0c382aaec9ddda743815899c3/lamb-campaign-fee';
+
+        async function loadProjects() {
+            const grid = document.getElementById('projectGrid');
+            grid.innerHTML = '<div style="color: var(--accent)">Scanning network...</div>';
+            try {
+                const projects = await bankr.invokeScript('getProjects');
+                grid.innerHTML = '';
+                if (projects.length === 0) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-dim); padding: 40px;">No active campaigns. Be the first.</div>';
+                    return;
+                }
+                projects.reverse().forEach(p => {
+                    const progress = Math.min(100, (p.raised / p.maxTarget) * 100);
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.onclick = () => bankr.prefillChat(`I want to contribute to \${p.name} (ID: \${p.id}) on the LAMB launchpad.`);
+                    card.innerHTML = `
+                        <h3>\${p.name}</h3>
+                        <p>\${p.description || 'No description provided.'}</p>
+                        <div class="links">
+                            \${p.website ? \`<a href="\${p.website}" target="_blank">WEB</a>\` : ''}
+                            \${p.xHandle ? \`<a href="https://x.com/\${p.xHandle.replace('@','')}" target="_blank">X</a>\` : ''}
+                            \${p.telegramLink ? \`<a href="\${p.telegramLink}" target="_blank">TG</a>\` : ''}
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: \${progress}%"></div>
+                        </div>
+                        <div class="stats">
+                            <span>Raised: \${p.raised} USDC</span>
+                            <span>Goal: \${p.maxTarget}</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (e) {
+                grid.innerHTML = '<div style="color: #ff4444">Error loading data.</div>';
+            }
+        }
+
+        function openModal() { document.getElementById('modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        async function submitProject() {
+            if (!bankr.ctx.walletAddress) {
+                await bankr.auth.requireSignIn();
+                return;
+            }
+
+            const data = {
+                name: document.getElementById('pName').value,
+                description: document.getElementById('pDesc').value,
+                minTarget: document.getElementById('pMin').value,
+                maxTarget: document.getElementById('pMax').value,
+                website: document.getElementById('pWeb').value,
+                xHandle: document.getElementById('pX').value,
+                telegramLink: document.getElementById('pTg').value,
+                campaignPost: document.getElementById('pPost').value
+            };
+
+            if (!data.name || !data.minTarget || !data.maxTarget) {
+                alert('Name and targets are required.');
+                return;
+            }
+
+            try {
+                // 1. Pay the $5 LAMB fee via x402
+                const payResult = await bankr.x402.fetch(X402_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ projectName: data.name }),
+                    maxPaymentUsd: 5.5
+                });
+
+                if (!payResult.ok) throw new Error('Fee payment failed: ' + payResult.body.error);
+
+                // 2. Create the project
+                await bankr.invokeScript('createProject', data);
+                closeModal();
+                loadProjects();
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        bankr.on('ready', () => {
+            const addr = bankr.ctx.walletAddress;
+            const display = document.getElementById('walletDisplay');
+            if (addr) {
+                display.innerText = \`CONNECTED: \${addr.slice(0,6)}...\${addr.slice(-4)}\`;
+            } else {
+                display.innerHTML = '<span style="cursor:pointer; text-decoration:underline" onclick="bankr.auth.requireSignIn()">CONNECT WALLET</span>';
+            }
+            loadProjects();
         });
     </script>
 </body>
