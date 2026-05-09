@@ -4,11 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAMB Launchpad</title>
-    <style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+
+        @layer components {
+          .btn {
+            @apply px-8 py-3 text-base font-mono text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors tracking-wide;
+          }
+        } 
+
+        @layer utilities {
+          .delay-150 {
+            animation-delay: 150ms;
+          }
+          .delay-300 {
+            animation-delay: 300ms;
+          }
+        } 
+
+        @keyframes spin {
+            0% {
+              transform: translateY(-20px);
+              opacity: 0;
+            }
+            100% {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+          
+          #emojis span {
+            display: inline-block;
+            animation: spin 0.1s ease-out;
+          }
+
         :root {
             --bg: #050505;
             --card-bg: #0a0a0a;
-            --accent: #00ff41;
+            --accent: #3b82f6; /* Blue-500 to match new btn */
             --text: #e0e0e0;
             --text-dim: #666;
             --border: #1a1a1a;
@@ -53,22 +89,6 @@
             text-transform: uppercase;
             letter-spacing: 4px;
             color: var(--accent);
-        }
-        .btn {
-            background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 10px 20px;
-            cursor: pointer;
-            font-family: inherit;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-        .btn:hover {
-            background: var(--accent);
-            color: var(--bg);
-            box-shadow: 0 0 15px var(--accent);
         }
         .grid {
             display: grid;
@@ -264,7 +284,7 @@
             </div>
             <div class="fee-notice">Creation Fee: $5 in $LAMB</div>
             <div class="modal-actions">
-                <button class="btn" style="border-color: #444; color: #444;" onclick="closeModal()">Cancel</button>
+                <button class="btn" style="background-color: #444;" onclick="closeModal()">Cancel</button>
                 <button class="btn" onclick="submitProject()">Launch</button>
             </div>
         </div>
