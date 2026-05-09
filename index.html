@@ -15,48 +15,6 @@
             --lamb-gold: #ffd700;
         }
 
-        /* Custom CSS from user */
-        .btn {
-            padding: 0.75rem 2rem;
-            font-size: 1rem;
-            line-height: 1.5rem;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            color: #fff;
-            background-color: #2563eb;
-            border-radius: 0.5rem;
-            transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: 0.025em;
-            border: none;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-        .btn:hover {
-            background-color: #1d4ed8;
-        }
-
-        .delay-150 {
-            animation-delay: 150ms;
-        }
-        .delay-300 {
-            animation-delay: 300ms;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        #emojis span {
-            display: inline-block;
-            animation: spin 0.1s ease-out;
-        }
-
         body {
             background: var(--bg);
             color: var(--text);
@@ -220,6 +178,20 @@
             gap: 15px;
             margin-top: 20px;
         }
+        .btn {
+            padding: 10px 25px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
         .fee-notice {
             font-size: 0.7rem;
             color: var(--lamb-gold);
@@ -305,42 +277,42 @@
             const grid = document.getElementById('projectGrid');
             grid.innerHTML = '<div style="color: var(--accent)">Scanning network...</div>';
             try {
-                const projects = await bankr.invokeScript('getProjects');
-                grid.innerHTML = '';
+                const projects = await bankr.invokeScript(\'getProjects\');
+                grid.innerHTML = \'\';
                 if (projects.length === 0) {
-                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-dim); padding: 40px;">No active campaigns. Be the first.</div>';
+                    grid.innerHTML = \'<div style="grid-column: 1/-1; text-align: center; color: var(--text-dim); padding: 40px;">No active campaigns. Be the first.</div>\';
                     return;
                 }
                 projects.reverse().forEach(p => {
                     const progress = Math.min(100, (p.raised / p.maxTarget) * 100);
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.onclick = () => bankr.prefillChat(`I want to contribute to \${p.name} (ID: \${p.id}) on the LAMB launchpad.`);
+                    const card = document.createElement(\'div\');
+                    card.className = \'card\';
+                    card.onclick = () => bankr.prefillChat(`I want to contribute to ${p.name} (ID: ${p.id}) on the LAMB launchpad.`);
                     card.innerHTML = `
-                        <h3>\${p.name}</h3>
-                        <p>\${p.description || 'No description provided.'}</p>
+                        <h3>${p.name}</h3>
+                        <p>${p.description || \'No description provided.\'}</p>
                         <div class="links">
-                            \${p.website ? \`<a href="\${p.website}" target="_blank">WEB</a>\` : ''}
-                            \${p.xHandle ? \`<a href="https://x.com/\${p.xHandle.replace('@','')}" target="_blank">X</a>\` : ''}
-                            \${p.telegramLink ? \`<a href="\${p.telegramLink}" target="_blank">TG</a>\` : ''}
+                            ${p.website ? `<a href="${p.website}" target="_blank">WEB</a>` : \'\'}
+                            ${p.xHandle ? `<a href="https://x.com/${p.xHandle.replace(\'@\',\'\')}" target="_blank">X</a>` : \'\'}
+                            ${p.telegramLink ? `<a href="${p.telegramLink}" target="_blank">TG</a>` : \'\'}
                         </div>
                         <div class="progress-container">
-                            <div class="progress-bar" style="width: \${progress}%"></div>
+                            <div class="progress-bar" style="width: ${progress}%"></div>
                         </div>
                         <div class="stats">
-                            <span>Raised: \${p.raised} USDC</span>
-                            <span>Goal: \${p.maxTarget}</span>
+                            <span>Raised: ${p.raised} USDC</span>
+                            <span>Goal: ${p.maxTarget}</span>
                         </div>
                     `;
                     grid.appendChild(card);
                 });
             } catch (e) {
-                grid.innerHTML = '<div style="color: #ff4444">Error loading data.</div>';
+                grid.innerHTML = \'<div style="color: #ff4444">Error loading data.</div>\';
             }
         }
 
-        function openModal() { document.getElementById('modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        function openModal() { document.getElementById(\'modal\').style.display = \'flex\'; }
+        function closeModal() { document.getElementById(\'modal\').style.display = \'none\'; }
 
         async function submitProject() {
             if (!bankr.ctx.walletAddress) {
@@ -349,33 +321,33 @@
             }
 
             const data = {
-                name: document.getElementById('pName').value,
-                description: document.getElementById('pDesc').value,
-                minTarget: document.getElementById('pMin').value,
-                maxTarget: document.getElementById('pMax').value,
-                website: document.getElementById('pWeb').value,
-                xHandle: document.getElementById('pX').value,
-                telegramLink: document.getElementById('pTg').value,
-                campaignPost: document.getElementById('pPost').value
+                name: document.getElementById(\'pName\').value,
+                description: document.getElementById(\'pDesc\').value,
+                minTarget: document.getElementById(\'pMin\').value,
+                maxTarget: document.getElementById(\'pMax\').value,
+                website: document.getElementById(\'pWeb\').value,
+                xHandle: document.getElementById(\'pX\').value,
+                telegramLink: document.getElementById(\'pTg\').value,
+                campaignPost: document.getElementById(\'pPost\').value
             };
 
             if (!data.name || !data.minTarget || !data.maxTarget) {
-                alert('Name and targets are required.');
+                alert(\'Name and targets are required.\');
                 return;
             }
 
             try {
                 // 1. Pay the $5 LAMB fee via x402
                 const payResult = await bankr.x402.fetch(X402_URL, {
-                    method: 'POST',
+                    method: \'POST\',
                     body: JSON.stringify({ projectName: data.name }),
                     maxPaymentUsd: 5.5
                 });
 
-                if (!payResult.ok) throw new Error('Fee payment failed: ' + payResult.body.error);
+                if (!payResult.ok) throw new Error(\'Fee payment failed: \' + payResult.body.error);
 
                 // 2. Create the project
-                await bankr.invokeScript('createProject', data);
+                await bankr.invokeScript(\'createProject\', data);
                 closeModal();
                 loadProjects();
             } catch (e) {
@@ -383,13 +355,13 @@
             }
         }
 
-        bankr.on('ready', () => {
+        bankr.on(\'ready\', () => {
             const addr = bankr.ctx.walletAddress;
-            const display = document.getElementById('walletDisplay');
+            const display = document.getElementById(\'walletDisplay\');
             if (addr) {
-                display.innerText = \`CONNECTED: \${addr.slice(0,6)}...\${addr.slice(-4)}\`;
+                display.innerText = `CONNECTED: ${addr.slice(0,6)}...${addr.slice(-4)}`;
             } else {
-                display.innerHTML = '<span style="cursor:pointer; text-decoration:underline" onclick="bankr.auth.requireSignIn()">CONNECT WALLET</span>';
+                display.innerHTML = \'<span style="cursor:pointer; text-decoration:underline" onclick="bankr.auth.requireSignIn()">CONNECT WALLET</span>\';
             }
             loadProjects();
         });
